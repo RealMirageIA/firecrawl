@@ -9,7 +9,7 @@ x-common-service: &common-service
 
 services:
   playwright-service:
-    build: apps/playwright-service
+    build: apps/playwright-service-ts
     environment:
       - PORT=3000
       - PROXY_SERVER=${PROXY_SERVER}
@@ -80,11 +80,14 @@ services:
       SELF_HOSTED_WEBHOOK_URL: ${SELF_HOSTED_WEBHOOK_URL}
       LOGGING_LEVEL: ${LOGGING_LEVEL}
       FLY_PROCESS_GROUP: worker
+      SAVE_TO_MARKDOWN_FILE: ${SAVE_TO_MARKDOWN_FILE}
     depends_on:
       - redis
       - playwright-service
       - api
     command: [ "pnpm", "run", "workers" ]
+    volumes:
+      - ${HOME}/firecrawl:/app/data
 
   redis:
     image: redis:alpine
@@ -95,3 +98,8 @@ services:
 networks:
   backend:
     driver: bridge
+
+volumes:
+  firecrawl-worker-data:
+    driver: local
+

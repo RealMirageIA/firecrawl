@@ -13,6 +13,7 @@ import { supabase_service } from "../services/supabase";
 import { Logger } from "../lib/logger";
 import { ScrapeEvents } from "../lib/scrape-events";
 import { configDotenv } from "dotenv";
+import fs from "fs";
 configDotenv();
 
 export async function startWebScraperPipeline({
@@ -167,6 +168,23 @@ const saveJob = async (job: Job, result: any, token: string, mode: string) => {
     //   }
     }
     ScrapeEvents.logJobEvent(job, "completed");
+  } catch (error) {
+    Logger.error(`🐂 Failed to update job status: ${error}`);
+  }
+};
+
+const saveToFile = async (job: Job, result: any, token: string, mode: string) => {
+  try {
+    const saveToFile = process.env.SAVE_TO_MARKDOWN_FILE === "true";
+    if (saveToFile) {
+      let url = job.data.url.replace(/^https?:\/\//, "").replace(/^www\./, "").trim();
+      fs.mkdirSync(`/app/data/markdown/${url}`, { recursive: true });
+      result.forEach((doc: Document) => {
+        fs.writeFileSync(`/app/data/markdown/${url}/${doc.metadata.title}.md`, doc.markdown);
+      });
+    } else {
+      Logger.debug(`🐂 No path to save file to`)
+    }
   } catch (error) {
     Logger.error(`🐂 Failed to update job status: ${error}`);
   }
